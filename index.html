@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Live Streaming</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 80%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: rgb(255, 255, 255);
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+      h1 {
+        margin-bottom: 20px;
+      }
+      #localVideo {
+        width: 100%;
+        height: auto;
+        max-height: 60%;
+        background-color: black;
+        border: 2px solid white;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+      #controls {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        background-color: white;
+        color: black;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Live Streaming</h1>
+    <video id="localVideo" autoplay playsinline></video>
+    <div id="controls">
+      <button id="startButton">Start Live Streaming</button>
+      <button id="stopButton">Stop Live Streaming</button>
+    </div>
+
+    <script>
+      let mediaRecorder;
+      let mediaStream;
+
+      async function startStreaming() {
+        console.log("Starting streaming...");
+        try {
+          console.log("Getting user media...");
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          });
+          document.getElementById("localVideo").srcObject = mediaStream;
+
+          console.log("Starting media recorder...");
+          mediaRecorder = new MediaRecorder(mediaStream, {
+            mimeType: 'video/webm; codecs="vp8, vorbis"',
+          });
+
+          mediaRecorder.ondataavailable = async (event) => {
+            if (event.data.size > 0) {
+              try {
+                console.log("Data available from media recorder:", event.data);
+                // Here you can handle the data as needed
+              } catch (error) {
+                console.error("Error handling data:", error);
+              }
+            }
+          };
+
+          mediaRecorder.start(100); // Send data every 100ms
+          console.log("Media recorder started");
+
+          mediaRecorder.onstop = () => {
+            console.log("Media recorder stopped");
+            // Handle the stop event
+          };
+
+          // Show the video elements
+          document.getElementById("localVideo").style.display = "block";
+        } catch (error) {
+          console.error("Error starting streaming:", error);
+        }
+      }
+
+      function stopStreaming() {
+        console.log("Stopping streaming...");
+        if (mediaRecorder) {
+          mediaRecorder.stop();
+          console.log("Media recorder stopped");
+        }
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          console.log("Media stream stopped");
+        }
+
+        // Hide the video elements
+        document.getElementById("localVideo").style.display = "none";
+      }
+
+      document.getElementById("startButton").addEventListener("click", () => {
+        console.log("Start button clicked");
+        startStreaming().catch((error) => {
+          console.error("Error in startStreaming:", error);
+        });
+      });
+
+      document.getElementById("stopButton").addEventListener("click", () => {
+        console.log("Stop button clicked");
+        stopStreaming();
+      });
+    </script>
+  </body>
+</html>
